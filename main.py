@@ -10,6 +10,7 @@ class State(TypedDict):
 
 
 def dummy_node(state: State):
+    print("Dummy node was traversed")
     return {"messages": state["messages"]}
 
 
