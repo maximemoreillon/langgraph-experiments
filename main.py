@@ -1,18 +1,33 @@
-from langgraph.prebuilt import create_react_agent
+from typing import Annotated
+
+from typing_extensions import TypedDict
+
+from langgraph.graph import StateGraph, START
+from langgraph.graph.message import add_messages
 
 
-def get_weather(city: str) -> str:
-    """Get weather for a given city."""
-    return f"It's always sunny in {city}!"
+class State(TypedDict):
+    messages: Annotated[list, add_messages]
 
 
-agent = create_react_agent(
-    model="openai:o3-mini", tools=[get_weather], prompt="You are a helpful assistant"
-)
+graph_builder = StateGraph(State)
 
-# Run the agent
-response = agent.invoke(
-    {"messages": [{"role": "user", "content": "what is the weather in sf"}]}
-)
 
-print(response["messages"])
+def dummy_node(state: State):
+    return {"messages": state["messages"]}
+
+
+graph_builder.add_node("start_node", dummy_node)
+graph_builder.add_node("second_node", dummy_node)
+
+graph_builder.add_edge(START, "start_node")
+graph_builder.add_edge("start_node", "second_node")
+
+graph = graph_builder.compile()
+
+
+print(graph.get_graph().draw_ascii())
+
+
+response = graph.invoke({"messages": ["message 1", "message 2"]})
+print(response)
